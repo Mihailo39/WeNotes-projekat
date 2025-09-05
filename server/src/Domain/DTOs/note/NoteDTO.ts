@@ -6,6 +6,7 @@ export class NoteDTO {
         public imageUrl: string | null = null,
         public isPinned: boolean = false,
         public isShared: boolean = false,
+        public sharedToken: string | null = null,
         public createdAt: Date = new Date(),
         public updatedAt: Date = new Date()
     ) {}

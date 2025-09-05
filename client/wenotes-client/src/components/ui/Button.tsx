@@ -13,15 +13,16 @@ const Button: React.FC<ButtonProps> = ({
   isLoading = false,
   className = '',
   disabled,
+  type = 'button',
   ...props
 }) => {
   const baseClasses = 'inline-flex items-center justify-center font-medium rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed';
   
   const variantClasses = {
-    primary: 'bg-blue-600 text-white hover:bg-blue-700 focus:ring-blue-500',
+    primary: 'bg-[#60cbff] text-white hover:bg-[#4db8e6] focus:ring-[#60cbff]',
     secondary: 'bg-gray-600 text-white hover:bg-gray-700 focus:ring-gray-500',
-    outline: 'border border-gray-300 text-gray-700 hover:bg-gray-50 focus:ring-gray-500',
-    ghost: 'text-gray-700 hover:bg-gray-100 focus:ring-gray-500',
+    outline: 'border border-[#60cbff] text-[#60cbff] hover:bg-[#60cbff] hover:text-white focus:ring-[#60cbff]',
+    ghost: 'text-[#60cbff] hover:bg-[#edffec] focus:ring-[#60cbff]',
   };
   
   const sizeClasses = {
@@ -30,11 +31,15 @@ const Button: React.FC<ButtonProps> = ({
     lg: 'px-6 py-3 text-base',
   };
 
-  const classes = `${baseClasses} ${variantClasses[variant]} ${sizeClasses[size]} ${className}`;
+  // Ako je className custom, koristi ga umesto default variant-a
+  const isCustomClass = className && (className.includes('bg-') || className.includes('text-'));
+  const finalVariantClasses = isCustomClass ? '' : variantClasses[variant];
+  const finalClasses = `${baseClasses} ${finalVariantClasses} ${sizeClasses[size]} ${className}`;
 
   return (
     <button
-      className={classes}
+      type={type}
+      className={finalClasses}
       disabled={disabled || isLoading}
       {...props}
     >

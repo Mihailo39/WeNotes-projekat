@@ -10,11 +10,13 @@ export class UserRepository implements IUserRepository {
             const query = 'INSERT INTO users (username, password_hash, role) VALUES (?, ?, ?)';
             const [result] = await db.execute<ResultSetHeader>(query, [user.username, user.password, user.role]);
 
-            return new User(result.insertId, user.username, user.password, user.role);
+            // Dohvati kreiranog korisnika sa datumima
+            const createdUser = await this.getById(result.insertId);
+            return createdUser || new User(result.insertId, user.username, user.password, user.role);
     }
 
     async getById(id: number): Promise<User | null> {
-            const query = 'SELECT id, username, password_hash AS password, role FROM users WHERE id = ?';
+            const query = 'SELECT id, username, password_hash AS password, role, created_at FROM users WHERE id = ?';
             const [rows] = await db.execute<RowDataPacket[]>(query, [id]);
 
             if (!rows.length) {
@@ -26,12 +28,14 @@ export class UserRepository implements IUserRepository {
                     row.id as number,
                     row.username as string,
                     row.password as string,
-                    this.mapRole(row.role)
+                    this.mapRole(row.role),
+                    row.created_at as string,
+                    row.created_at as string // Koristimo created_at i za updated_at jer nema updated_at kolone
                 );
     }
 
     async getByUsername(username: string): Promise<User | null> {
-            const query = 'SELECT id, username, password_hash AS password, role FROM users WHERE username = ?';
+            const query = 'SELECT id, username, password_hash AS password, role, created_at FROM users WHERE username = ?';
             const [rows] = await db.execute<RowDataPacket[]>(query, [username]);
 
             if (!rows.length) {
@@ -43,14 +47,23 @@ export class UserRepository implements IUserRepository {
                     row.id as number,
                     row.username as string,
                     row.password as string,
-                    this.mapRole(row.role)
+                    this.mapRole(row.role),
+                    row.created_at as string,
+                    row.created_at as string // Koristimo created_at i za updated_at jer nema updated_at kolone
                 );
     }
 
     async getAll(): Promise<User[]> {
-            const query = 'SELECT id, username, password_hash AS password, role FROM users ORDER BY id ASC';
+            const query = 'SELECT id, username, password_hash AS password, role, created_at FROM users ORDER BY id ASC';
             const [rows] = await db.execute<RowDataPacket[]>(query);
-            return rows.map(row => new User(row.id, row.username, row.password, this.mapRole(row.role)));
+            return rows.map(row => new User(
+                row.id, 
+                row.username, 
+                row.password, 
+                this.mapRole(row.role),
+                row.created_at as string,
+                row.created_at as string // Koristimo created_at i za updated_at jer nema updated_at kolone
+            ));
     }
 
     async update(user: User): Promise<User | null> {

@@ -1,0 +1,76 @@
+CREATE TABLE users (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    username VARCHAR(50) NOT NULL UNIQUE,
+    password_hash VARCHAR(255) NOT NULL,
+    role ENUM('user', 'premium') DEFAULT 'user',
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE notes (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    user_id INT NOT NULL,
+    title VARCHAR(100) NOT NULL,
+    content TEXT NOT NULL,
+    image_url VARCHAR(255),
+    is_pinned BOOLEAN DEFAULT FALSE,
+    is_shared BOOLEAN DEFAULT FALSE,
+    shared_token VARCHAR(64) UNIQUE,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id)
+);
+
+SHOW CREATE TABLE notes;
+
+SELECT CONSTRAINT_NAME
+FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE
+WHERE TABLE_NAME = 'notes' AND REFERENCED_TABLE_NAME = 'users';
+
+ALTER TABLE notes DROP FOREIGN KEY notes_ibfk_1;
+ALTER TABLE notes
+ADD CONSTRAINT fk_notes_user_id
+FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE;
+
+
+
+-- Test korisnici
+INSERT INTO users (username, password_hash, role) VALUES
+('Mihailo', 'hashpass1', 'premium'),
+('Ana', 'hashpass2', 'user');
+
+-- Test beleške
+INSERT INTO notes (user_id, title, content, is_pinned) VALUES
+(1, 'Ideja za projekat', 'Napraviti aplikaciju za beleške.', TRUE),
+(2, 'Podsetnik', 'Kupi mleko.', FALSE);
+
+INSERT INTO notes (user_id, title, content, is_pinned) VALUES
+(1, 'Ideja za projekat', 'Napraviti aplikaciju za beleške.', TRUE),
+(2, 'Podsetnik', 'Kupi mleko.', FALSE);
+
+INSERT INTO notes (user_id, title, content, is_pinned) VALUES
+(1, 'Serije', 'Sopranovi, Prijatelji, Narkos', FALSE),
+(1, 'Trening', 'Trening sutra u 9h', FALSE),
+(2, 'Knjige', 'Stranac, Metamorfoza, Provincijalac', FALSE),
+(2, 'ToDo', 'Usisati', TRUE);
+
+DELETE FROM users WHERE id = 1;
+DELETE FROM users WHERE id = 2;
+DELETE FROM users WHERE id = 3;
+
+CREATE TABLE IF NOT EXISTS refresh_tokens (
+  id BIGINT PRIMARY KEY AUTO_INCREMENT,
+  user_id INT NOT NULL,
+  token VARCHAR(255) NOT NULL UNIQUE,
+  expires_at DATETIME NOT NULL,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  revoked_at DATETIME NULL,
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+CREATE INDEX idx_refresh_user ON refresh_tokens(user_id, expires_at);
+
+INSERT INTO notes (user_id, title, content, is_pinned) VALUES
+(8, 'Provera', 'Radi?', TRUE);
+
+
+ALTER TABLE notes MODIFY COLUMN image_url LONGTEXT;

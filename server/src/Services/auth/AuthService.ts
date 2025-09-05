@@ -21,17 +21,16 @@ export class AuthService implements IAuthService {
         return { user, accessToken, refreshToken };
     }
 
-    async login(username: string, password: string): Promise<AuthResult | null> {
-
+    async login(username: string, password: string): Promise<AuthResult> {
         const user = await this.userRepository.getByUsername(username);
 
         if (!user) {
-            return null;
+            throw new Error('User not found');
         }
 
         const success = await bcrypt.compare(password, user.password);
         if (!success) {
-            return null;
+            throw new Error('Invalid password');
         }
 
         const refreshToken = generateRefreshToken();

@@ -58,26 +58,28 @@ export class AuthController  {
         try {
             const { username, password } = req.body;
 
-        const validation = loginValidationAuth(username, password);
-        if (!validation.success) {
-            res.status(400).json({ success: false, message: validation.message });
-            return;
-        }
+            const validation = loginValidationAuth(username, password);
+            if (!validation.success) {
+                res.status(400).json({ success: false, message: validation.message });
+                return;
+            }
 
-        const result = await this.authService.login(username, password);
-
-        if (!result) {
-            res.status(401).json({ success: false, message: 'Invalid credentials' });
-            return;
-        }
-        
-        const dto = toUserLoginDTO(result.user, result.accessToken);
-        res.cookie(refreshCookieName, result.refreshToken, refreshCookieOptions)
-           .status(200)
-           .json({ success: true, data: dto });
-        } catch (err) {
+            const result = await this.authService.login(username, password);
+            
+            const dto = toUserLoginDTO(result.user, result.accessToken);
+            res.cookie(refreshCookieName, result.refreshToken, refreshCookieOptions)
+               .status(200)
+               .json({ success: true, data: dto });
+        } catch (err: any) {
             console.error(err);
-            res.status(500).json({ success: false, message: "Internal Server Error" });
+            
+            if (err.message === 'User not found') {
+                res.status(401).json({ success: false, message: 'Korisnik sa tim korisničkim imenom ne postoji.' });
+            } else if (err.message === 'Invalid password') {
+                res.status(401).json({ success: false, message: 'Pogrešna lozinka.' });
+            } else {
+                res.status(500).json({ success: false, message: "Internal Server Error" });
+            }
         }
     }
 

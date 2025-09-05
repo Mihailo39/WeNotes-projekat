@@ -46,7 +46,7 @@ app.use(
 );
 
 // Parsers
-app.use(express.json());
+app.use(express.json({ limit: '10mb' })); // Povećan limit za slike
 app.use(cookieParser());
 
 // Healthcheck (korisno za brzu proveru)

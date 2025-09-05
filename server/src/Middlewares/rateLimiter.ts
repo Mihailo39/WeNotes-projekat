@@ -2,7 +2,7 @@ import rateLimit from "express-rate-limit";
 
 export const loginLimiter = rateLimit({
   windowMs: 60_000, // 1 min
-  max: 5,           // 5 pokušaja u minutu
+  max: 10,          // dozvoli 10 pokušaja u minutu
   standardHeaders: true,
   legacyHeaders: false,
   message: { message: "Too many login attempts. Try again soon." }

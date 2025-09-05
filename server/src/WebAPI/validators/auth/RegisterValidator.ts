@@ -10,8 +10,8 @@ export function dataValidationAuth(username?: string, password?: string, role?: 
         return { success: false, message: 'Username should contain at least 3 characters' }
     }
 
-    if (password.length < 8) {
-        return { success: false, message: 'Password should contain at least 8 characters' }
+    if (password.length < 6) {
+        return { success: false, message: 'Password should contain at least 6 characters' }
     }
 
     if (password.length > 30) {

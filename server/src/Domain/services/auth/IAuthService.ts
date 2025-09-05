@@ -9,7 +9,7 @@ export type AuthResult = {
 }
 
 export interface IAuthService {
-    login(username: string, password: string): Promise<AuthResult | null>;
+    login(username: string, password: string): Promise<AuthResult>;
     register(username: string, password: string, role: Role): Promise<AuthResult | null>;
     refresh(oldRefreshToken: string): Promise<AuthResult | null>;
     logoutAll(userId: number): Promise<void>;

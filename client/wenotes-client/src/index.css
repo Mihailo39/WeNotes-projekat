@@ -1,7 +1,8 @@
-@import "tailwindcss/preflight";
-@import "tailwindcss/utilities";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
-/*Ovde sam menjao!!!*/
+/* tvoje util klase ostaju ispod */
 @layer utilities {
   .line-clamp-2 {
     display: -webkit-box;
@@ -10,7 +11,6 @@
     -webkit-box-orient: vertical;
     overflow: hidden;
   }
-  
   .line-clamp-3 {
     display: -webkit-box;
     -webkit-line-clamp: 3;

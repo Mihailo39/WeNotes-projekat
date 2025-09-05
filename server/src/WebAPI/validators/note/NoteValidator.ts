@@ -20,10 +20,14 @@ export function dataValidationNoteCreate(
   }
 
   if (imageUrl && typeof imageUrl === "string") {
-    try {
-      new URL(imageUrl);
-    } catch {
-      return { success: false, message: "Image URL is not valid." };
+    // Dozvoli data: URL (base64) za slike iz klijenta
+    const isDataUrl = imageUrl.startsWith('data:image/');
+    if (!isDataUrl) {
+      try {
+        new URL(imageUrl);
+      } catch {
+        return { success: false, message: "Image URL is not valid." };
+      }
     }
   }
 
@@ -49,10 +53,13 @@ export function dataValidationNoteUpdate(
   }
 
   if (imageUrl && typeof imageUrl === "string") {
-    try {
-      new URL(imageUrl);
-    } catch {
-      return { success: false, message: "Image URL is not valid." };
+    const isDataUrl = imageUrl.startsWith('data:image/');
+    if (!isDataUrl) {
+      try {
+        new URL(imageUrl);
+      } catch {
+        return { success: false, message: "Image URL is not valid." };
+      }
     }
   }
 

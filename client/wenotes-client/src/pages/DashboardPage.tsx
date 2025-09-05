@@ -5,6 +5,7 @@ import NoteCard from '../components/notes/NoteCard';
 import NoteForm from '../components/notes/NoteForm';
 import Modal from '../components/ui/Modal';
 import Button from '../components/ui/Button';
+import { noteService } from '../api/services/noteService';
 import type { NoteCard as NoteCardType, CreateNoteData, UpdateNoteData } from '../types/note';
 
 const DashboardPage: React.FC = () => {
@@ -14,111 +15,145 @@ const DashboardPage: React.FC = () => {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [editingNote, setEditingNote] = useState<NoteCardType | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [showImageModal, setShowImageModal] = useState(false);
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
-  // Mock data za demonstraciju
-  useEffect(() => {
-    const mockNotes: NoteCardType[] = [
-      {
-        id: 1,
-        title: 'Dobrodošli u WeNotes!',
-        content: 'Ovo je vaša prva beleška. Možete je izmeniti, obrisati ili učiniti javnom.',
-        isPublic: false,
-        isPinned: true,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      },
-      {
-        id: 2,
-        title: 'Kako koristiti WeNotes',
-        content: 'WeNotes je platforma za kreiranje i upravljanje beleškama. Možete kreirati privatne i javne beleške, zakačiti ih pin-om i deliti sa drugima.',
-        isPublic: true,
-        isPinned: false,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      },
-      {
-        id: 3,
-        title: 'Premium funkcionalnosti',
-        content: 'Kao premium korisnik imate pristup naprednim funkcionalnostima kao što su neograničeno kreiranje beleški, napredne opcije za deljenje i više.',
-        isPublic: false,
-        isPinned: false,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      },
-    ];
-
-    setTimeout(() => {
-      setNotes(mockNotes);
+  // Učitaj beleške iz baze
+  const loadNotes = async () => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      const userNotes = await noteService.getUserNotes();
+      setNotes(userNotes);
+    } catch (err) {
+      console.error('Greška pri učitavanju beleški:', err);
+      setError('Greška pri učitavanju beleški');
+    } finally {
       setIsLoading(false);
-    }, 1000);
+    }
+  };
+
+  useEffect(() => {
+    loadNotes();
   }, []);
 
   const handleCreateNote = async (data: CreateNoteData) => {
-    setIsSubmitting(true);
-    
-    // Simuliram API poziv
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    const newNote: NoteCardType = {
-      id: Date.now(),
-      ...data,
-      isPinned: false,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
-    
-    setNotes(prev => [newNote, ...prev]);
-    setShowCreateModal(false);
-    setIsSubmitting(false);
+    try {
+      setIsSubmitting(true);
+      setError(null);
+      
+      // Proveri limit za obične korisnike
+      if (user?.role === 'user' && notes.length >= 10) {
+        setError('Obični korisnici mogu imati maksimalno 10 beleški. Nadogradite na premium za neograničeno kreiranje.');
+        return;
+      }
+
+      const newNote = await noteService.createNote(data);
+      setNotes(prev => [newNote, ...prev]);
+      setShowCreateModal(false);
+    } catch (err: any) {
+      console.error('Greška pri kreiranju beleške:', err);
+      setError(err.message || 'Greška pri kreiranju beleške');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleUpdateNote = async (data: UpdateNoteData) => {
     if (!editingNote) return;
     
-    setIsSubmitting(true);
-    
-    // Simuliram API poziv
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    setNotes(prev => prev.map(note => 
-      note.id === editingNote.id 
-        ? { ...note, ...data, updatedAt: new Date().toISOString() }
-        : note
-    ));
-    
-    setEditingNote(null);
-    setIsSubmitting(false);
+    try {
+      setIsSubmitting(true);
+      setError(null);
+      
+      const updatedNote = await noteService.updateNote(editingNote.id, data);
+      setNotes(prev => prev.map(note => 
+        note.id === editingNote.id ? updatedNote : note
+      ));
+      
+      setEditingNote(null);
+    } catch (err: any) {
+      console.error('Greška pri ažuriranju beleške:', err);
+      setError(err.message || 'Greška pri ažuriranju beleške');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleEditNote = (note: NoteCardType) => {
     setEditingNote(note);
   };
 
-  const handleDeleteNote = (noteId: number) => {
-    if (window.confirm('Da li ste sigurni da želite da obrišete ovu belešku?')) {
+  const handleDeleteNote = async (noteId: number) => {
+    try {
+      await noteService.deleteNote(noteId);
       setNotes(prev => prev.filter(note => note.id !== noteId));
+    } catch (err: any) {
+      console.error('Greška pri brisanju beleške:', err);
+      setError(err.message || 'Greška pri brisanju beleške');
     }
   };
 
-  const handleTogglePin = (noteId: number) => {
-    setNotes(prev => prev.map(note => 
-      note.id === noteId ? { ...note, isPinned: !note.isPinned } : note
-    ));
+  const handleTogglePin = async (noteId: number) => {
+    try {
+      const updatedNote = await noteService.togglePin(noteId);
+      setNotes(prev => prev.map(note => 
+        note.id === noteId ? updatedNote : note
+      ));
+    } catch (err: any) {
+      console.error('Greška pri pin-ovanju beleške:', err);
+      setError(err.message || 'Greška pri pin-ovanju beleške');
+    }
   };
 
-  const handleTogglePublic = (noteId: number) => {
-    setNotes(prev => prev.map(note => 
-      note.id === noteId ? { ...note, isPublic: !note.isPublic } : note
-    ));
+  const handleCopyNote = async (noteId: number) => {
+    try {
+      const duplicatedNote = await noteService.duplicateNote(noteId);
+      setNotes(prev => [duplicatedNote, ...prev]);
+    } catch (err: any) {
+      console.error('Greška pri kopiranju beleške:', err);
+      setError(err.message || 'Greška pri kopiranju beleške');
+    }
+  };
+
+  const handleShareNote = async (noteId: number) => {
+    try {
+      const sharedNote = await noteService.shareNote(noteId);
+      // Ažuriraj belešku sa novim shared statusom
+      setNotes(prev => prev.map(note => 
+        note.id === noteId ? sharedNote.note : note
+      ));
+      
+      // Kopiraj token u clipboard
+      if (sharedNote.sharedToken) {
+        const shareUrl = `${window.location.origin}/shared/${sharedNote.sharedToken}`;
+        await navigator.clipboard.writeText(shareUrl);
+        alert(`Token je kopiran u clipboard!\n\nURL za deljenje: ${shareUrl}`);
+      }
+    } catch (err: any) {
+      console.error('Greška pri deljenju beleške:', err);
+      setError(err.message || 'Greška pri deljenju beleške');
+    }
+  };
+
+  const handleImageClick = (imageUrl: string) => {
+    setSelectedImage(imageUrl);
+    setShowImageModal(true);
+  };
+
+  const handleCloseImageModal = () => {
+    setShowImageModal(false);
+    setSelectedImage(null);
   };
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-[#edffec]">
         <Header />
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="flex justify-center items-center h-64">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#60cbff]"></div>
           </div>
         </div>
       </div>
@@ -127,9 +162,11 @@ const DashboardPage: React.FC = () => {
 
   const pinnedNotes = notes.filter(note => note.isPinned);
   const regularNotes = notes.filter(note => !note.isPinned);
+  const maxNotes = user?.role === 'user' ? 10 : Infinity;
+  const remainingNotes = maxNotes - notes.length;
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-[#edffec]">
       <Header />
       
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -141,21 +178,59 @@ const DashboardPage: React.FC = () => {
           <p className="text-gray-600">
             Upravljajte svojim beleškama i organizujte svoje ideje
           </p>
+          {user?.role === 'user' && (
+            <div className="mt-2 text-sm text-gray-500">
+              Preostalo beleški: {remainingNotes} od {maxNotes}
+            </div>
+          )}
         </div>
+
+        {/* Error Display */}
+        {error && (
+          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+            <div className="flex items-center">
+              <svg className="w-5 h-5 text-red-400 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+              </svg>
+              <span className="text-red-700">{error}</span>
+              <button
+                onClick={() => setError(null)}
+                className="ml-auto text-red-400 hover:text-red-600"
+              >
+                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                </svg>
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* Actions */}
         <div className="mb-8 flex justify-between items-center">
           <div className="flex space-x-4">
-            <Button onClick={() => setShowCreateModal(true)}>
+            <Button 
+              onClick={() => setShowCreateModal(true)}
+              disabled={user?.role === 'user' && notes.length >= 10}
+            >
               Nova beleška
             </Button>
-            <Button variant="outline">
-              Filtriraj
-            </Button>
+            {user?.role === 'user' && notes.length >= 10 && (
+              <span className="text-sm text-red-600 flex items-center">
+                <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                </svg>
+                Dostigli ste limit od 10 beleški
+              </span>
+            )}
           </div>
           
           <div className="text-sm text-gray-500">
             Ukupno beleški: {notes.length}
+            {user?.role === 'user' && (
+              <span className="ml-2 text-blue-600">
+                (Limit: {maxNotes})
+              </span>
+            )}
           </div>
         </div>
 
@@ -163,7 +238,7 @@ const DashboardPage: React.FC = () => {
         {pinnedNotes.length > 0 && (
           <div className="mb-8">
             <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-              <svg className="w-5 h-5 text-blue-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
+              <svg className="w-5 h-5 text-[#60cbff] mr-2" fill="currentColor" viewBox="0 0 20 20">
                 <path d="M5 4a2 2 0 012-2h6a2 2 0 012 2v14l-5-2.5L5 18V4z" />
               </svg>
               Zakačene beleške
@@ -176,7 +251,9 @@ const DashboardPage: React.FC = () => {
                   onEdit={handleEditNote}
                   onDelete={handleDeleteNote}
                   onTogglePin={handleTogglePin}
-                  onTogglePublic={handleTogglePublic}
+                  onShare={handleShareNote}
+                  onCopy={handleCopyNote}
+                  onImageClick={handleImageClick}
                 />
               ))}
             </div>
@@ -195,7 +272,9 @@ const DashboardPage: React.FC = () => {
                   onEdit={handleEditNote}
                   onDelete={handleDeleteNote}
                   onTogglePin={handleTogglePin}
-                  onTogglePublic={handleTogglePublic}
+                  onShare={handleShareNote}
+                  onCopy={handleCopyNote}
+                  onImageClick={handleImageClick}
                 />
               ))}
             </div>
@@ -208,7 +287,10 @@ const DashboardPage: React.FC = () => {
               </div>
               <h3 className="text-lg font-medium text-gray-900 mb-2">Nema beleški</h3>
               <p className="text-gray-500 mb-4">Kreirajte svoju prvu belešku da počnete</p>
-              <Button onClick={() => setShowCreateModal(true)}>
+              <Button 
+                onClick={() => setShowCreateModal(true)}
+                disabled={user?.role === 'user' && notes.length >= 10}
+              >
                 Kreiraj belešku
               </Button>
             </div>
@@ -224,7 +306,7 @@ const DashboardPage: React.FC = () => {
         size="lg"
       >
         <NoteForm
-          onSubmit={(data) => handleCreateNote(data as CreateNoteData)}
+          onSubmit={handleCreateNote}
           onCancel={() => setShowCreateModal(false)}
           isLoading={isSubmitting}
         />
@@ -240,10 +322,31 @@ const DashboardPage: React.FC = () => {
         {editingNote && (
           <NoteForm
             note={editingNote}
-            onSubmit={(data) => handleUpdateNote(data as UpdateNoteData)}
+            onSubmit={handleUpdateNote}
             onCancel={() => setEditingNote(null)}
             isLoading={isSubmitting}
           />
+        )}
+      </Modal>
+
+      {/* Image Modal */}
+      <Modal
+        isOpen={showImageModal}
+        onClose={handleCloseImageModal}
+        title="Pregled slike"
+        size="lg"
+      >
+        {selectedImage && (
+          <div className="text-center">
+            <img
+              src={selectedImage}
+              alt="Pregled slike"
+              className="max-w-full max-h-96 object-contain mx-auto rounded-lg"
+              onError={(e) => {
+                (e.target as HTMLImageElement).style.display = 'none';
+              }}
+            />
+          </div>
         )}
       </Modal>
     </div>

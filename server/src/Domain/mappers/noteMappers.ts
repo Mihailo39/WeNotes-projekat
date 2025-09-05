@@ -11,6 +11,7 @@ export function toNoteDTO(n: Note): NoteDTO {
     n.imageUrl,
     n.isPinned,
     n.isShared,
+    n.sharedToken,
     n.createdAt,
     n.updatedAt
   );

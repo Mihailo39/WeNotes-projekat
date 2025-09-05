@@ -100,7 +100,7 @@ export class NoteRepository implements INoteRepository {
             row.image_url,
             row.is_pinned,
             row.is_shared,
-            row.shared_token,
+            row.shared_token && row.shared_token !== '0' ? row.shared_token : null,
             new Date(row.created_at ?? Date.now()),
             new Date(row.updated_at ?? Date.now())
         );

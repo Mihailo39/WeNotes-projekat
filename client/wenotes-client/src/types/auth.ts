@@ -1,35 +1,30 @@
 export interface User {
   id: number;
-  email: string;
   username: string;
-  role: 'USER' | 'PREMIUM_USER';
+  role: 'user' | 'premium';
   createdAt: string;
   updatedAt: string;
+  email?: string; // opcionalno, ako backend nekad doda
 }
 
 export interface LoginCredentials {
-  email: string;
+  username: string;
   password: string;
 }
 
 export interface RegisterCredentials {
-  email: string;
   username: string;
   password: string;
   confirmPassword: string;
-}
-
-export interface AuthResponse {
-  user: User;
-  accessToken: string;
-  refreshToken: string;
+  role?: 'user' | 'premium'; // ⬅ promena
 }
 
 export interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
   isLoading: boolean;
-  login: (credentials: LoginCredentials) => Promise<void>;
-  register: (credentials: RegisterCredentials) => Promise<void>;
-  logout: () => void;
+  login: (credentials: LoginCredentials) => Promise<{ user: User | null; accessToken: string }>;
+  register: (credentials: RegisterCredentials) => Promise<{ user: User | null; accessToken: string }>;
+  logout: () => Promise<void>; // naš logout je async
+  updateUser: (updatedUser: User) => void;
 }
