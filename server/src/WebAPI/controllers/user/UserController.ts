@@ -50,7 +50,7 @@ export class UserController {
       username?: string; role?: any; newPassword?: string; currentPassword?: string;
     };
 
-    // ako se menja lozinka → potvrdi currentPassword ovde ili u servisu
+    // ako se menja lozinka onda potvrdi currentPassword ovde ili u servisu
     const changingPassword = !!newPassword;
     if (changingPassword) {
       const current = await this.userRepository.getById(targetId);
@@ -71,7 +71,7 @@ export class UserController {
       return res.status(400).json({ success: false, message: "Update failed" });
     }
 
-    // ako je menjana lozinka → klijenta izloguj (server-side si već revoke-ovao u servisu ako tako odlučiš)
+    // ako je menjana lozinka onda klijenta izloguj
     if (changingPassword) {
       // ako radiš revokeAll u servisu AuthService, pozovi ga ovde i očisti cookie
       res.clearCookie(refreshCookieName, { path: refreshCookieOptions.path });

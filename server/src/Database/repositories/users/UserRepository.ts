@@ -31,6 +31,7 @@ export class UserRepository implements IUserRepository {
                     this.mapRole(row.role),
                     row.created_at as string,
                     row.created_at as string // Koristimo created_at i za updated_at jer nema updated_at kolone
+                    //Ako budem prosirivao kolone prosiricu i ovde.
                 );
     }
 
@@ -50,6 +51,7 @@ export class UserRepository implements IUserRepository {
                     this.mapRole(row.role),
                     row.created_at as string,
                     row.created_at as string // Koristimo created_at i za updated_at jer nema updated_at kolone
+                    //Ako budem prosirivao kolone prosiricu i ovde.
                 );
     }
 
@@ -63,6 +65,7 @@ export class UserRepository implements IUserRepository {
                 this.mapRole(row.role),
                 row.created_at as string,
                 row.created_at as string // Koristimo created_at i za updated_at jer nema updated_at kolone
+                //Ako budem prosirivao kolone prosiricu i ovde.
             ));
     }
 

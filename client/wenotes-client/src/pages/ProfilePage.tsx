@@ -112,7 +112,7 @@ const ProfilePage: React.FC = () => {
     } catch (err: any) {
       console.error('Greška pri ažuriranju profila:', err);
       
-      // Prijateljske poruke za specifične greške
+      // Poruke za greske
       if (err.response?.status === 400) {
         if (err.response?.data?.message?.includes('Current password is incorrect')) {
           setError('Trenutna lozinka nije ispravna');
@@ -149,7 +149,7 @@ const ProfilePage: React.FC = () => {
     } catch (err: any) {
       console.error('Greška pri brisanju naloga:', err);
       
-      // Prijateljske poruke za specifične greške
+      // Poruke za greske
       if (err.response?.status === 401) {
         setDeleteError('Trenutna lozinka nije ispravna');
       } else if (err.response?.status === 400) {

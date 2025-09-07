@@ -21,7 +21,6 @@ export class NoteController {
         this.router.post("/:id/toggle-pin", authenticateJWT, this.togglePin.bind(this));
         this.router.post("/:id/duplicate", authenticateJWT, this.duplicate.bind(this));
         this.router.post("/:id/share", authenticateJWT, this.share.bind(this));
-        // public shared note endpoint
         this.router.get("/shared/:token", this.getSharedByToken.bind(this));
     }
 

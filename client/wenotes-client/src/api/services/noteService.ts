@@ -16,8 +16,18 @@ export const noteService = {
 
   // Kreiraj novu belešku
   async createNote(data: CreateNoteData): Promise<NoteCard> {
-    const response = await axiosClient.post('/notes', data);
-    return response.data.data;
+    try {
+      const response = await axiosClient.post('/notes', data);
+      return response.data.data;
+    } catch (e: any) {
+      const status = e?.response?.status;
+      const message = e?.response?.data?.message;
+      if (status === 400) {
+        // Backend vraća 400 kada user ima 10 beleški
+        throw new Error('Ne možete kreirati više beleški od 10.');
+      }
+      throw new Error(message || 'Greška pri kreiranju beleške.');
+    }
   },
 
   // Ažuriraj belešku
@@ -39,8 +49,17 @@ export const noteService = {
 
   // Duplikuj belešku
   async duplicateNote(id: number): Promise<NoteCard> {
-    const response = await axiosClient.post(`/notes/${id}/duplicate`);
-    return response.data.data;
+    try {
+      const response = await axiosClient.post(`/notes/${id}/duplicate`);
+      return response.data.data;
+    } catch (e: any) {
+      const status = e?.response?.status;
+      const message = e?.response?.data?.message;
+      if (status === 400) {
+        throw new Error('Ne možete kreirati više beleški od 10.');
+      }
+      throw new Error(message || 'Greška pri duplikovanju beleške.');
+    }
   },
 
   // Podeli belešku

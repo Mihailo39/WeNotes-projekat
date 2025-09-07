@@ -4,7 +4,7 @@ export interface User {
   role: 'user' | 'premium';
   createdAt: string;
   updatedAt: string;
-  email?: string; // opcionalno, ako backend nekad doda
+  email?: string; // U slucaju da prosirim da ima i mail svoj
 }
 
 export interface LoginCredentials {
@@ -16,7 +16,7 @@ export interface RegisterCredentials {
   username: string;
   password: string;
   confirmPassword: string;
-  role?: 'user' | 'premium'; // ⬅ promena
+  role?: 'user' | 'premium';
 }
 
 export interface AuthContextType {

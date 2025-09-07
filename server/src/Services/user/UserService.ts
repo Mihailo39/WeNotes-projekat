@@ -30,7 +30,7 @@ export class UserService implements IUserService {
         ? await bcrypt.hash(input.newPassword, this.saltRounds)
         : current.password;
 
-    // prevent self-upgrading role via public endpoint; keep existing role
+    // Ne može se menjati role ovde
     const toStore = new User(
       current.id,
       input.username || current.username,
@@ -48,10 +48,10 @@ export class UserService implements IUserService {
     const ok = await bcrypt.compare(currentPassword, user.password);
     if (!ok) return false;
 
-    // 1) Revoke all refresh tokens
+    // 1) Revoke svih refresh tokena za korisnika
     await this.refreshTokens.revokeAllForUser(userId);
 
-    // 2) Delete user
+    // 2) Brisanje korisnika
     const deleted = await this.userRepository.delete(userId);
     return deleted;
   }

@@ -1,4 +1,4 @@
-// src/app.ts
+// src/app.ts - wiring i konfiguracija aplikacije
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
@@ -59,8 +59,7 @@ const userRepository = new UserRepository();
 const noteRepository = new NoteRepository();
 const refreshTokenRepository = new RefreshTokenRepository();
 
-// AuthService — ako ti konstruktor trenutno prima samo userRepository, dodaj i refreshTokenRepository
-// (naš predlog AuthService ima login/register/refresh/logoutAll i koristi refreshTokenRepository unutra)
+// AuthService
 const authService = new AuthService(userRepository, refreshTokenRepository);
 
 const userService = new UserService(userRepository, refreshTokenRepository);

@@ -43,7 +43,7 @@ const DashboardPage: React.FC = () => {
       setIsSubmitting(true);
       setError(null);
       
-      // Proveri limit za obične korisnike
+      // Proveri limit za obične korisnike i error za preko deset
       if (user?.role === 'user' && notes.length >= 10) {
         setError('Obični korisnici mogu imati maksimalno 10 beleški. Nadogradite na premium za neograničeno kreiranje.');
         return;

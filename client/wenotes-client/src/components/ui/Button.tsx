@@ -31,7 +31,6 @@ const Button: React.FC<ButtonProps> = ({
     lg: 'px-6 py-3 text-base',
   };
 
-  // Ako je className custom, koristi ga umesto default variant-a
   const isCustomClass = className && (className.includes('bg-') || className.includes('text-'));
   const finalVariantClasses = isCustomClass ? '' : variantClasses[variant];
   const finalClasses = `${baseClasses} ${finalVariantClasses} ${sizeClasses[size]} ${className}`;

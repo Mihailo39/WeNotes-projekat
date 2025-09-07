@@ -1,9 +1,10 @@
-// src/api/axiosClient.ts
+// axiosClient - podešeni axios instance sa interceptorima
 import axios, { AxiosError, type InternalAxiosRequestConfig } from 'axios';
 
 const axiosClient = axios.create({
-  baseURL: import.meta.env.VITE_API_URL, // http://localhost:4000/api/v1
-  withCredentials: true,                 // zbog httpOnly RT cookie
+  // Fallback na proxy path kada VITE_API_URL nije postavljen (dev)
+  baseURL: import.meta.env.VITE_API_URL || '/api/v1',
+  withCredentials: true, // zbog httpOnly RT cookie
 });
 
 axiosClient.interceptors.request.use((config: InternalAxiosRequestConfig) => {

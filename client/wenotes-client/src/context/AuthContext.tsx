@@ -1,3 +1,5 @@
+//Wrap
+
 import React, { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import type { User, LoginCredentials, RegisterCredentials, AuthContextType } from '../types/auth';
@@ -46,7 +48,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // INIT: 1) pokušaj refresh; 2) ako nema RT kolačića, a postoji access_token → /user/users/me
+  // INIT: 1) pokušaj refresh; 2) ako nema RT kolačića, a postoji access_token onda /user/users/me
   useEffect(() => {
     let isMounted = true;
     

@@ -20,7 +20,6 @@ export class AuthController  {
         this.router.post('/register', this.register.bind(this));
         this.router.post('/login',      loginLimiter,      this.login.bind(this));
         this.router.post("/refresh",        refreshLimiter,     this.refresh.bind(this));
-        // GET alias to help Postman/dev where cookies may be easier to attach
         this.router.get("/refresh",         refreshLimiter,     this.refresh.bind(this));
         this.router.post("/logout",     authenticateJWT,    this.logout.bind(this));
     }
