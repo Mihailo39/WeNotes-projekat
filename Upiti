@@ -31,32 +31,6 @@ ALTER TABLE notes
 ADD CONSTRAINT fk_notes_user_id
 FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE;
 
-
-
--- Test korisnici
-INSERT INTO users (username, password_hash, role) VALUES
-('Mihailo', 'hashpass1', 'premium'),
-('Ana', 'hashpass2', 'user');
-
--- Test beleške
-INSERT INTO notes (user_id, title, content, is_pinned) VALUES
-(1, 'Ideja za projekat', 'Napraviti aplikaciju za beleške.', TRUE),
-(2, 'Podsetnik', 'Kupi mleko.', FALSE);
-
-INSERT INTO notes (user_id, title, content, is_pinned) VALUES
-(1, 'Ideja za projekat', 'Napraviti aplikaciju za beleške.', TRUE),
-(2, 'Podsetnik', 'Kupi mleko.', FALSE);
-
-INSERT INTO notes (user_id, title, content, is_pinned) VALUES
-(1, 'Serije', 'Sopranovi, Prijatelji, Narkos', FALSE),
-(1, 'Trening', 'Trening sutra u 9h', FALSE),
-(2, 'Knjige', 'Stranac, Metamorfoza, Provincijalac', FALSE),
-(2, 'ToDo', 'Usisati', TRUE);
-
-DELETE FROM users WHERE id = 1;
-DELETE FROM users WHERE id = 2;
-DELETE FROM users WHERE id = 3;
-
 CREATE TABLE IF NOT EXISTS refresh_tokens (
   id BIGINT PRIMARY KEY AUTO_INCREMENT,
   user_id INT NOT NULL,
@@ -68,9 +42,5 @@ CREATE TABLE IF NOT EXISTS refresh_tokens (
 );
 
 CREATE INDEX idx_refresh_user ON refresh_tokens(user_id, expires_at);
-
-INSERT INTO notes (user_id, title, content, is_pinned) VALUES
-(8, 'Provera', 'Radi?', TRUE);
-
 
 ALTER TABLE notes MODIFY COLUMN image_url LONGTEXT;

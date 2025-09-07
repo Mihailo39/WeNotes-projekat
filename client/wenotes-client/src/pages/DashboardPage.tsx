@@ -1,60 +1,46 @@
-import React, { useState, useEffect } from 'react';
-import { useAuth } from '../context/AuthContext';
+import React, { useState } from 'react';
+import { useAuth } from '../hooks/useAuth';
+import { useNotes } from '../hooks/useNotes';
 import Header from '../components/layout/Header';
 import NoteCard from '../components/notes/NoteCard';
 import NoteForm from '../components/notes/NoteForm';
 import Modal from '../components/ui/Modal';
 import Button from '../components/ui/Button';
-import { noteService } from '../api/services/noteService';
 import type { NoteCard as NoteCardType, CreateNoteData, UpdateNoteData } from '../types/note';
 
 const DashboardPage: React.FC = () => {
   const { user } = useAuth();
-  const [notes, setNotes] = useState<NoteCardType[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const {
+    notes,
+    pinnedNotes,
+    regularNotes,
+    isLoading,
+    error,
+    maxNotes,
+    remainingNotes,
+    createNote,
+    updateNote,
+    deleteNote,
+    togglePin,
+    duplicateNote,
+    shareNote,
+    clearError
+  } = useNotes();
+  
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [editingNote, setEditingNote] = useState<NoteCardType | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [showImageModal, setShowImageModal] = useState(false);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
-  // Učitaj beleške iz baze
-  const loadNotes = async () => {
-    try {
-      setIsLoading(true);
-      setError(null);
-      const userNotes = await noteService.getUserNotes();
-      setNotes(userNotes);
-    } catch (err) {
-      console.error('Greška pri učitavanju beleški:', err);
-      setError('Greška pri učitavanju beleški');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    loadNotes();
-  }, []);
-
+  // Handler funkcije koje koriste useNotes hook
   const handleCreateNote = async (data: CreateNoteData) => {
     try {
       setIsSubmitting(true);
-      setError(null);
-      
-      // Proveri limit za obične korisnike i error za preko deset
-      if (user?.role === 'user' && notes.length >= 10) {
-        setError('Obični korisnici mogu imati maksimalno 10 beleški. Nadogradite na premium za neograničeno kreiranje.');
-        return;
-      }
-
-      const newNote = await noteService.createNote(data);
-      setNotes(prev => [newNote, ...prev]);
+      await createNote(data);
       setShowCreateModal(false);
     } catch (err: any) {
       console.error('Greška pri kreiranju beleške:', err);
-      setError(err.message || 'Greška pri kreiranju beleške');
     } finally {
       setIsSubmitting(false);
     }
@@ -65,17 +51,10 @@ const DashboardPage: React.FC = () => {
     
     try {
       setIsSubmitting(true);
-      setError(null);
-      
-      const updatedNote = await noteService.updateNote(editingNote.id, data);
-      setNotes(prev => prev.map(note => 
-        note.id === editingNote.id ? updatedNote : note
-      ));
-      
+      await updateNote(editingNote.id, data);
       setEditingNote(null);
     } catch (err: any) {
       console.error('Greška pri ažuriranju beleške:', err);
-      setError(err.message || 'Greška pri ažuriranju beleške');
     } finally {
       setIsSubmitting(false);
     }
@@ -87,43 +66,31 @@ const DashboardPage: React.FC = () => {
 
   const handleDeleteNote = async (noteId: number) => {
     try {
-      await noteService.deleteNote(noteId);
-      setNotes(prev => prev.filter(note => note.id !== noteId));
+      await deleteNote(noteId);
     } catch (err: any) {
       console.error('Greška pri brisanju beleške:', err);
-      setError(err.message || 'Greška pri brisanju beleške');
     }
   };
 
   const handleTogglePin = async (noteId: number) => {
     try {
-      const updatedNote = await noteService.togglePin(noteId);
-      setNotes(prev => prev.map(note => 
-        note.id === noteId ? updatedNote : note
-      ));
+      await togglePin(noteId);
     } catch (err: any) {
       console.error('Greška pri pin-ovanju beleške:', err);
-      setError(err.message || 'Greška pri pin-ovanju beleške');
     }
   };
 
   const handleCopyNote = async (noteId: number) => {
     try {
-      const duplicatedNote = await noteService.duplicateNote(noteId);
-      setNotes(prev => [duplicatedNote, ...prev]);
+      await duplicateNote(noteId);
     } catch (err: any) {
       console.error('Greška pri kopiranju beleške:', err);
-      setError(err.message || 'Greška pri kopiranju beleške');
     }
   };
 
   const handleShareNote = async (noteId: number) => {
     try {
-      const sharedNote = await noteService.shareNote(noteId);
-      // Ažuriraj belešku sa novim shared statusom
-      setNotes(prev => prev.map(note => 
-        note.id === noteId ? sharedNote.note : note
-      ));
+      const sharedNote = await shareNote(noteId);
       
       // Kopiraj token u clipboard
       if (sharedNote.sharedToken) {
@@ -133,7 +100,6 @@ const DashboardPage: React.FC = () => {
       }
     } catch (err: any) {
       console.error('Greška pri deljenju beleške:', err);
-      setError(err.message || 'Greška pri deljenju beleške');
     }
   };
 
@@ -159,11 +125,6 @@ const DashboardPage: React.FC = () => {
       </div>
     );
   }
-
-  const pinnedNotes = notes.filter(note => note.isPinned);
-  const regularNotes = notes.filter(note => !note.isPinned);
-  const maxNotes = user?.role === 'user' ? 10 : Infinity;
-  const remainingNotes = maxNotes - notes.length;
 
   return (
     <div className="min-h-screen bg-[#edffec]">
@@ -194,7 +155,7 @@ const DashboardPage: React.FC = () => {
               </svg>
               <span className="text-red-700">{error}</span>
               <button
-                onClick={() => setError(null)}
+                onClick={clearError}
                 className="ml-auto text-red-400 hover:text-red-600"
               >
                 <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
@@ -210,16 +171,16 @@ const DashboardPage: React.FC = () => {
           <div className="flex space-x-4">
             <Button 
               onClick={() => setShowCreateModal(true)}
-              disabled={user?.role === 'user' && notes.length >= 10}
+              disabled={user?.role === 'user' && notes.length >= maxNotes}
             >
               Nova beleška
             </Button>
-            {user?.role === 'user' && notes.length >= 10 && (
+            {user?.role === 'user' && notes.length >= maxNotes && (
               <span className="text-sm text-red-600 flex items-center">
                 <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
                 </svg>
-                Dostigli ste limit od 10 beleški
+                Dostigli ste limit od {maxNotes} beleški
               </span>
             )}
           </div>
@@ -289,7 +250,7 @@ const DashboardPage: React.FC = () => {
               <p className="text-gray-500 mb-4">Kreirajte svoju prvu belešku da počnete</p>
               <Button 
                 onClick={() => setShowCreateModal(true)}
-                disabled={user?.role === 'user' && notes.length >= 10}
+                disabled={user?.role === 'user' && notes.length >= maxNotes}
               >
                 Kreiraj belešku
               </Button>

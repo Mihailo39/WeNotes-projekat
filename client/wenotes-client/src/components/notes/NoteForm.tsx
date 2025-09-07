@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useAuth } from '../../context/AuthContext';
+import { useAuth } from '../../hooks/useAuth';
 import type { NoteCard, CreateNoteData, UpdateNoteData } from '../../types/note';
 import Button from '../ui/Button';
 import Input from '../ui/Input';

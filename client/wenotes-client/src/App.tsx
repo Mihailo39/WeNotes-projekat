@@ -1,5 +1,6 @@
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation, Link } from 'react-router-dom';
-import { AuthProvider, useAuth } from './context/AuthContext';
+import { AppProviders } from './providers/AppProviders';
+import { useAuth } from './hooks/useAuth';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import DashboardPage from './pages/DashboardPage';
@@ -107,9 +108,9 @@ const AppRoutes: React.FC = () => {
 function App() {
   return (
     <Router>
-      <AuthProvider>
+      <AppProviders>
         <AppRoutes />
-      </AuthProvider>
+      </AppProviders>
     </Router>
   );
 }
